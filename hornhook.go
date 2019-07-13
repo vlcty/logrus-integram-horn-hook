@@ -17,6 +17,7 @@ type HornHook struct {
 
 type HornHookText struct {
     Text string `json:"text"`
+    Markdown bool `json:"mrkdwn"`
 }
 
 func New(webkookID string) *HornHook {
@@ -31,7 +32,10 @@ func (hook *HornHook) AddLevel(level logrus.Level) {
 }
 
 func (hook *HornHook) Fire(entry *logrus.Entry) error {
-    hornText := HornHookText{ Text: hook.formatEntry(entry) }
+    hornText := HornHookText{
+        Text: hook.formatEntry(entry),
+        Markdown: false }
+
     builder := &strings.Builder{}
 
     encodererr := json.NewEncoder(builder).Encode(hornText)
@@ -52,11 +56,12 @@ func (hook *HornHook) Fire(entry *logrus.Entry) error {
 }
 
 func (hook *HornHook) formatEntry(entry *logrus.Entry) string {
+    value, _ := entry.String()
+
     if len(hook.Appname) == 0 {
-        return fmt.Sprintf("\\[%s] %s", strings.ToUpper(entry.Level.String()), entry.Message)
+        return fmt.Sprintf("%s", value)
     } else {
-        return fmt.Sprintf("(%s) \\[%s] %s", hook.Appname, strings.ToUpper(entry.Level.String()),
-            entry.Message)
+        return fmt.Sprintf("(%s) %s", hook.Appname, value)
     }
 }
 
